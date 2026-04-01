@@ -22,7 +22,7 @@
 
 Interlink BOT is an automated tool designed to mining $ITLG tokens across multiple accounts. It provides seamless offers robust proxy support for enhanced security and reliability performance.
 
-**🔗 Get Started:** [Register on Interlink Validator](https://interlinklabs.ai/referral?refCode=26122003)
+**🔗 Get Started:** [Register on Interlinklabs](https://interlinklabs.ai/referral?refCode=26122003)
 
 > **Referral Code:** Use code `26122003` during registration for benefits!
 
