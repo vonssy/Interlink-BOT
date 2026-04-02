@@ -263,8 +263,8 @@ class Interlink:
                 headers = self.initialize_headers()
                 headers["Content-Type"] = "application/json"
                 payload = {
-                    "loginId": int(self.accounts[email]["interlinkId"]),
-                    "passcode": int(self.accounts[email]["passcode"]),
+                    "loginId": self.accounts[email]["interlinkId"],
+                    "passcode": self.accounts[email]["passcode"],
                     "email": email
                 }
 
@@ -291,8 +291,8 @@ class Interlink:
                 headers = self.initialize_headers()
                 headers["Content-Type"] = "application/json"
                 payload = {
-                    "loginId": int(self.accounts[email]["interlinkId"]),
-                    "otp": int(otp_code)
+                    "loginId": self.accounts[email]["interlinkId"],
+                    "otp": otp_code
                 }
 
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
