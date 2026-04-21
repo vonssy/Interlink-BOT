@@ -107,8 +107,8 @@ python3 setup.py
 
 > **💡 What does setup.py do?**
 > - Automatically logs in to your Interlink App accounts
-> - Extracts bearer tokens automatically
-> - Saves tokens to `tokens.json` for the bot to use
+> - Extracts tokens automatically
+> - Saves tokens to `accounts.json` for the bot to use
 
 ### Start the Bot
 

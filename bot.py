@@ -289,8 +289,8 @@ class Interlink:
 
         return None
     
-    async def token_balance(self, email: str, proxy_url=None, retries=5):
-        url = f"{self.BASE_API}/api/v1/token/get-token"
+    async def user_info(self, email: str, proxy_url=None, retries=5):
+        url = f"{self.BASE_API}/api/v1/auth/current-user-full"
         
         for attempt in range(retries):
             connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
@@ -298,8 +298,12 @@ class Interlink:
                 headers = self.initialize_headers(email)
                 headers["Authorization"] = f"Bearer {self.accounts[email]['accessToken']}"
 
+                params = {
+                    "include": "userInfo,token,isClaimable"
+                }
+
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.get(url=url, headers=headers, proxy=proxy, proxy_auth=proxy_auth) as response:
+                    async with session.get(url=url, headers=headers, params=params, proxy=proxy, proxy_auth=proxy_auth) as response:
                         await self.enusre_ok(response)
                         return await response.json()
             except (Exception, ClientResponseError) as e:
@@ -307,34 +311,8 @@ class Interlink:
                     await asyncio.sleep(5)
                     continue
                 self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}Balance:{Style.RESET_ALL}"
-                    f"{Fore.RED+Style.BRIGHT} Failed to Fetch Token Earned {Style.RESET_ALL}"
-                    f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
-                    f"{Fore.YELLOW+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
-                )
-
-        return None
-            
-    async def claimable_check(self, email: str, proxy_url=None, retries=5):
-        url = f"{self.BASE_API}/api/v1/token/check-is-claimable"
-        
-        for attempt in range(retries):
-            connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
-            try:
-                headers = self.initialize_headers(email)
-                headers["Authorization"] = f"Bearer {self.accounts[email]['accessToken']}"
-
-                async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.get(url=url, headers=headers, proxy=proxy, proxy_auth=proxy_auth) as response:
-                        await self.enusre_ok(response)
-                        return await response.json()
-            except (Exception, ClientResponseError) as e:
-                if attempt < retries - 1:
-                    await asyncio.sleep(5)
-                    continue
-                self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}Mining :{Style.RESET_ALL}"
-                    f"{Fore.RED+Style.BRIGHT} Failed to Fetch Status {Style.RESET_ALL}"
+                    f"{Fore.CYAN+Style.BRIGHT}User   :{Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT} Failed to Fetch Info {Style.RESET_ALL}"
                     f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
                     f"{Fore.YELLOW+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
                 )
@@ -364,6 +342,66 @@ class Interlink:
                     f"{Fore.RED+Style.BRIGHT} Not Claimed {Style.RESET_ALL}"
                     f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
                     f"{Fore.YELLOW+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
+                )
+
+        return None
+            
+    async def group_mining_list(self, email: str, proxy_url=None, retries=1):
+        url = f"{self.BASE_API}/api/v1/group-mining/get-list-group-mining"
+
+        for attempt in range(retries):
+            connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
+            try:
+                headers = self.initialize_headers(email)
+                headers["Authorization"] = f"Bearer {self.accounts[email]['accessToken']}"
+                headers["Content-Type"] = "application/json"
+
+                async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
+                    async with session.post(url=url, headers=headers, json={}, proxy=proxy, proxy_auth=proxy_auth) as response:
+                        await self.enusre_ok(response)
+                        return await response.json()
+            except (Exception, ClientResponseError) as e:
+                if attempt < retries - 1:
+                    await asyncio.sleep(5)
+                    continue
+                self.log(
+                    f"{Fore.CYAN+Style.BRIGHT}Group  :{Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT} Failed to Fetch List {Style.RESET_ALL}"
+                    f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
+                    f"{Fore.YELLOW+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
+                )
+
+        return None
+            
+    async def claim_group_mining(self, email: str, group_id: str, proxy_url=None, retries=1):
+        url = f"{self.BASE_API}/api/v1/group-mining/claim-group-mining"
+
+        for attempt in range(retries):
+            connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
+            try:
+                headers = self.initialize_headers(email)
+                headers["Authorization"] = f"Bearer {self.accounts[email]['accessToken']}"
+                headers["Content-Type"] = "application/json"
+
+                payload = {
+                    "groupId": group_id
+                }
+
+                async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
+                    async with session.post(url=url, headers=headers, json=payload, proxy=proxy, proxy_auth=proxy_auth) as response:
+                        await self.enusre_ok(response)
+                        return await response.json()
+            except (Exception, ClientResponseError) as e:
+                if attempt < retries - 1:
+                    await asyncio.sleep(5)
+                    continue
+                self.log(
+                    f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
+                    f"{Fore.WHITE+Style.BRIGHT}Group{Style.RESET_ALL}"
+                    f"{Fore.BLUE+Style.BRIGHT} {group_id} {Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT}Failed to Claim{Style.RESET_ALL}"
+                    f"{Fore.MAGENTA+Style.BRIGHT} - {Style.RESET_ALL}"
+                    f"{Fore.YELLOW+Style.BRIGHT}{str(e)}{Style.RESET_ALL}"
                 )
 
         return None
@@ -428,39 +466,16 @@ class Interlink:
         is_valid = await self.process_check_tokens(email, proxy_url)
         if not is_valid: return False
 
-        balance = await self.token_balance(email, proxy_url)
-        if balance:
-            token_balance = balance.get("data", {}).get("interlinkTokenAmount", 0)
-            silver_balance = balance.get("data", {}).get("interlinkSilverTokenAmount", 0)
-            gold_balance = balance.get("data", {}).get("interlinkGoldTokenAmount", 0)
-            diamond_balance = balance.get("data", {}).get("interlinkDiamondTokenAmount", 0)
+        user = await self.user_info(email, proxy_url)
+        if user:
+            balance = user.get("data", {}).get("token", {}).get("interlinkGoldTokenAmount", 0)
 
-            self.log(f"{Fore.CYAN+Style.BRIGHT}Balance:{Style.RESET_ALL}")
             self.log(
-                f"{Fore.MAGENTA+Style.BRIGHT}  ● {Style.RESET_ALL}"
-                f"{Fore.BLUE+Style.BRIGHT}Interlink:{Style.RESET_ALL}"
-                f"{Fore.WHITE+Style.BRIGHT} {token_balance} {Style.RESET_ALL}"
-            )
-            self.log(
-                f"{Fore.MAGENTA+Style.BRIGHT}  ● {Style.RESET_ALL}"
-                f"{Fore.BLUE+Style.BRIGHT}Silver   :{Style.RESET_ALL}"
-                f"{Fore.WHITE+Style.BRIGHT} {silver_balance} {Style.RESET_ALL}"
-            )
-            self.log(
-                f"{Fore.MAGENTA+Style.BRIGHT}  ● {Style.RESET_ALL}"
-                f"{Fore.BLUE+Style.BRIGHT}Gold     :{Style.RESET_ALL}"
-                f"{Fore.WHITE+Style.BRIGHT} {gold_balance} {Style.RESET_ALL}"
-            )
-            self.log(
-                f"{Fore.MAGENTA+Style.BRIGHT}  ● {Style.RESET_ALL}"
-                f"{Fore.BLUE+Style.BRIGHT}Diamond  :{Style.RESET_ALL}"
-                f"{Fore.WHITE+Style.BRIGHT} {diamond_balance} {Style.RESET_ALL}"
+                f"{Fore.CYAN+Style.BRIGHT}Balance:{Style.RESET_ALL}"
+                f"{Fore.WHITE+Style.BRIGHT} {balance} $ITLG {Style.RESET_ALL}"
             )
 
-        claimable = await self.claimable_check(email, proxy_url)
-        if claimable:
-            is_claimable = claimable.get("data", {}).get("isClaimable", False)
-
+            is_claimable = user.get("data", {}).get("isClaimable", {}).get("isClaimable", False)
             if is_claimable:
                 claim = await self.claim_airdrop(email, proxy_url)
                 if claim:
@@ -475,15 +490,70 @@ class Interlink:
                     )
             
             else:
-                next_frame_ts = claimable.get("data", {}).get("nextFrame", 0) / 1000
-                next_frame_wib = datetime.fromtimestamp(next_frame_ts).strftime('%x %X')
+                next_frame_ts = user.get("data", {}).get("isClaimable", {}).get("nextFrame", 0)
+                formatted_next_frame = datetime.fromtimestamp(next_frame_ts / 1000).strftime('%x %X')
 
                 self.log(
                     f"{Fore.CYAN+Style.BRIGHT}Mining :{Style.RESET_ALL}"
                     f"{Fore.YELLOW+Style.BRIGHT} Already Claimed {Style.RESET_ALL}"
                     f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
                     f"{Fore.CYAN+Style.BRIGHT} Next Claim at: {Style.RESET_ALL}"
-                    f"{Fore.WHITE+Style.BRIGHT}{next_frame_wib}{Style.RESET_ALL}"
+                    f"{Fore.WHITE+Style.BRIGHT}{formatted_next_frame}{Style.RESET_ALL}"
+                )
+
+        group_list = await self.group_mining_list(email, proxy_url)
+        if group_list:
+            next_claimable = group_list.get("data", {}).get("nextTimeClaim", 0)
+            groups = group_list.get("data", {}).get("groups", [])
+
+            if groups != []:
+                self.log(f"{Fore.CYAN+Style.BRIGHT}Group  :{Style.RESET_ALL}")
+
+                for group in groups:
+                    group_id = group.get("groupId")
+                    reward = group.get("totalReward")
+                    secure = group.get("secure")
+                    can_claim = group.get("canClaim")
+
+                    if not secure:
+                        self.log(
+                            f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
+                            f"{Fore.WHITE+Style.BRIGHT}Group{Style.RESET_ALL}"
+                            f"{Fore.BLUE+Style.BRIGHT} {group_id} {Style.RESET_ALL}"
+                            f"{Fore.YELLOW+Style.BRIGHT}Not Secured{Style.RESET_ALL}"
+                        )
+                        continue
+
+                    if not can_claim:
+                        formatted_next_frame = datetime.fromtimestamp(next_claimable / 1000).strftime('%x %X')
+                        self.log(
+                            f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
+                            f"{Fore.WHITE+Style.BRIGHT}Group{Style.RESET_ALL}"
+                            f"{Fore.BLUE+Style.BRIGHT} {group_id} {Style.RESET_ALL}"
+                            f"{Fore.YELLOW+Style.BRIGHT}Already Claimed{Style.RESET_ALL}"
+                            f"{Fore.MAGENTA+Style.BRIGHT} - {Style.RESET_ALL}"
+                            f"{Fore.CYAN+Style.BRIGHT}Next Claim at:{Style.RESET_ALL}"
+                            f"{Fore.WHITE+Style.BRIGHT} {formatted_next_frame} {Style.RESET_ALL}"
+                        )
+                        continue
+
+                    claim = await self.claim_group_mining(email, group_id, proxy_url)
+                    if not claim: continue
+
+                    self.log(
+                        f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
+                        f"{Fore.WHITE+Style.BRIGHT}Group{Style.RESET_ALL}"
+                        f"{Fore.BLUE+Style.BRIGHT} {group_id} {Style.RESET_ALL}"
+                        f"{Fore.GREEN+Style.BRIGHT}Claimed{Style.RESET_ALL}"
+                        f"{Fore.MAGENTA+Style.BRIGHT} - {Style.RESET_ALL}"
+                        f"{Fore.CYAN+Style.BRIGHT}Reward:{Style.RESET_ALL}"
+                        f"{Fore.WHITE+Style.BRIGHT} {reward} $ITLG {Style.RESET_ALL}"
+                    )
+
+            else:
+                self.log(
+                    f"{Fore.CYAN+Style.BRIGHT}Group  :{Style.RESET_ALL}"
+                    f"{Fore.YELLOW+Style.BRIGHT} No Available Mining Group {Style.RESET_ALL}"
                 )
         
     async def main(self):
@@ -505,7 +575,7 @@ class Interlink:
 
                 if self.USE_PROXY: self.load_proxies()
         
-                separator = "=" * 27
+                separator = "=" * 28
                 for idx, account in enumerate(accounts, start=1):
                     email = account.get("email")
                     interlink_id = account.get("interlinkId")
@@ -561,7 +631,7 @@ class Interlink:
                     await self.process_accounts(email)
                     await asyncio.sleep(random.uniform(2.0, 3.0))
 
-                self.log(f"{Fore.CYAN + Style.BRIGHT}={Style.RESET_ALL}"*65)
+                self.log(f"{Fore.CYAN + Style.BRIGHT}={Style.RESET_ALL}"*67)
                 seconds = 4 * 60 * 60
                 while seconds > 0:
                     formatted_time = self.format_seconds(seconds)
