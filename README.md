@@ -31,7 +31,7 @@ Interlink BOT is an automated tool designed to mining $ITLG tokens across multip
 - 🔄 **Automated Account Management** - Retrieve account information automatically
 - 🌐 **Flexible Proxy Support** - Run with or without proxy configuration
 - 🔀 **Smart Proxy Rotation** - Automatic rotation of invalid proxies
-- ⛏️ **Mining $ITLG Tokens** - Automated claim $ITLG tokens every 4 hours
+- ⛏️ **$ITLG Mining** - Automated claim $ITLG from private & groups mining
 - 👥 **Multi-Account Support** - Manage multiple accounts simultaneously
 
 ## 📋 Requirements
