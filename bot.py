@@ -13,7 +13,7 @@ import asyncio, random, time, json, sys, re, os
 class Interlink:
     def __init__(self) -> None:
         self.BASE_API = "https://prod.interlinklabs.ai"
-        self.VERSION = "5.0.0"
+        self.VERSION = "5.0.1"
 
         self.USE_PROXY = False
         self.ROTATE_PROXY = False
@@ -396,8 +396,7 @@ class Interlink:
                     await asyncio.sleep(5)
                     continue
                 self.log(
-                    f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
-                    f"{Fore.WHITE+Style.BRIGHT}Group{Style.RESET_ALL}"
+                    f"{Fore.CYAN+Style.BRIGHT}Group  :{Style.RESET_ALL}"
                     f"{Fore.BLUE+Style.BRIGHT} {group_id} {Style.RESET_ALL}"
                     f"{Fore.RED+Style.BRIGHT}Failed to Claim{Style.RESET_ALL}"
                     f"{Fore.MAGENTA+Style.BRIGHT} - {Style.RESET_ALL}"
@@ -503,57 +502,41 @@ class Interlink:
 
         group_list = await self.group_mining_list(email, proxy_url)
         if group_list:
-            next_claimable = group_list.get("data", {}).get("nextTimeClaim", 0)
             groups = group_list.get("data", {}).get("groups", [])
 
             if groups != []:
-                self.log(f"{Fore.CYAN+Style.BRIGHT}Group  :{Style.RESET_ALL}")
+                selected_group = None
 
                 for group in groups:
-                    group_id = group.get("groupId")
-                    reward = group.get("totalReward")
-                    secure = group.get("secure")
-                    can_claim = group.get("canClaim")
+                    if group.get("secure") and group.get("canClaim"):
+                        selected_group = group
+                        break
 
-                    if not secure:
-                        self.log(
-                            f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
-                            f"{Fore.WHITE+Style.BRIGHT}Group{Style.RESET_ALL}"
-                            f"{Fore.BLUE+Style.BRIGHT} {group_id} {Style.RESET_ALL}"
-                            f"{Fore.YELLOW+Style.BRIGHT}Not Secured{Style.RESET_ALL}"
-                        )
-                        continue
-
-                    if not can_claim:
-                        formatted_next_frame = datetime.fromtimestamp(next_claimable / 1000).strftime('%x %X')
-                        self.log(
-                            f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
-                            f"{Fore.WHITE+Style.BRIGHT}Group{Style.RESET_ALL}"
-                            f"{Fore.BLUE+Style.BRIGHT} {group_id} {Style.RESET_ALL}"
-                            f"{Fore.YELLOW+Style.BRIGHT}Already Claimed{Style.RESET_ALL}"
-                            f"{Fore.MAGENTA+Style.BRIGHT} - {Style.RESET_ALL}"
-                            f"{Fore.CYAN+Style.BRIGHT}Next Claim at:{Style.RESET_ALL}"
-                            f"{Fore.WHITE+Style.BRIGHT} {formatted_next_frame} {Style.RESET_ALL}"
-                        )
-                        continue
+                if selected_group:
+                    group_id = selected_group.get("groupId")
+                    reward = selected_group.get("totalReward")
 
                     claim = await self.claim_group_mining(email, group_id, proxy_url)
-                    if not claim: continue
+                    if claim:
+                        self.log(
+                            f"{Fore.CYAN+Style.BRIGHT}Group  :{Style.RESET_ALL}"
+                            f"{Fore.BLUE+Style.BRIGHT} {group_id} {Style.RESET_ALL}"
+                            f"{Fore.GREEN+Style.BRIGHT}Claimed{Style.RESET_ALL}"
+                            f"{Fore.MAGENTA+Style.BRIGHT} - {Style.RESET_ALL}"
+                            f"{Fore.CYAN+Style.BRIGHT}Reward:{Style.RESET_ALL}"
+                            f"{Fore.WHITE+Style.BRIGHT} {reward} $ITLG {Style.RESET_ALL}"
+                        )
 
+                else:
                     self.log(
-                        f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
-                        f"{Fore.WHITE+Style.BRIGHT}Group{Style.RESET_ALL}"
-                        f"{Fore.BLUE+Style.BRIGHT} {group_id} {Style.RESET_ALL}"
-                        f"{Fore.GREEN+Style.BRIGHT}Claimed{Style.RESET_ALL}"
-                        f"{Fore.MAGENTA+Style.BRIGHT} - {Style.RESET_ALL}"
-                        f"{Fore.CYAN+Style.BRIGHT}Reward:{Style.RESET_ALL}"
-                        f"{Fore.WHITE+Style.BRIGHT} {reward} $ITLG {Style.RESET_ALL}"
+                        f"{Fore.CYAN+Style.BRIGHT}Group  :{Style.RESET_ALL}"
+                        f"{Fore.YELLOW+Style.BRIGHT} No Claimable Mining Found {Style.RESET_ALL}"
                     )
 
             else:
                 self.log(
                     f"{Fore.CYAN+Style.BRIGHT}Group  :{Style.RESET_ALL}"
-                    f"{Fore.YELLOW+Style.BRIGHT} No Available Mining Group {Style.RESET_ALL}"
+                    f"{Fore.YELLOW+Style.BRIGHT} There're No Groups Yet {Style.RESET_ALL}"
                 )
         
     async def main(self):
