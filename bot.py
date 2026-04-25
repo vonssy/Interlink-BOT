@@ -90,7 +90,7 @@ class Interlink:
         except Exception as e:
             return []
     
-    async def load_proxies(self):
+    def load_proxies(self):
         filename = "proxy.txt"
         try:
             if not os.path.exists(filename):
