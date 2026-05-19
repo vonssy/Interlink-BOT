@@ -13,7 +13,7 @@ import asyncio, random, time, json, sys, re, os
 class Interlink:
     def __init__(self) -> None:
         self.BASE_API = "https://prod.interlinklabs.ai"
-        self.VERSION = "5.0.1"
+        self.VERSION = "5.0.2"
 
         self.USE_PROXY = False
         self.ROTATE_PROXY = False
@@ -404,6 +404,59 @@ class Interlink:
                 )
 
         return None
+            
+    async def synchronize_status(self, email: str, proxy_url=None, retries=1):
+        url = f"{self.BASE_API}/api/v1/synchronize-curator"
+
+        for attempt in range(retries):
+            connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
+            try:
+                headers = self.initialize_headers(email)
+                headers["Authorization"] = f"Bearer {self.accounts[email]['accessToken']}"
+
+                async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
+                    async with session.get(url=url, headers=headers, proxy=proxy, proxy_auth=proxy_auth) as response:
+                        await self.enusre_ok(response)
+                        return await response.json()
+            except (Exception, ClientResponseError) as e:
+                if attempt < retries - 1:
+                    await asyncio.sleep(5)
+                    continue
+                self.log(
+                    f"{Fore.CYAN+Style.BRIGHT}Metric :{Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT} Failed to Fetch Status {Style.RESET_ALL}"
+                    f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
+                    f"{Fore.YELLOW+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
+                )
+
+        return None
+            
+    async def synchronize_metric(self, email: str, proxy_url=None, retries=1):
+        url = f"{self.BASE_API}/api/v1/group-mining/claim-group-mining"
+
+        for attempt in range(retries):
+            connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
+            try:
+                headers = self.initialize_headers(email)
+                headers["Authorization"] = f"Bearer {self.accounts[email]['accessToken']}"
+                headers["Content-Type"] = "application/json"
+
+                async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
+                    async with session.post(url=url, headers=headers, json={}, proxy=proxy, proxy_auth=proxy_auth) as response:
+                        await self.enusre_ok(response)
+                        return await response.json()
+            except (Exception, ClientResponseError) as e:
+                if attempt < retries - 1:
+                    await asyncio.sleep(5)
+                    continue
+                self.log(
+                    f"{Fore.CYAN+Style.BRIGHT}Metric :{Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT} Failed to Synchronized {Style.RESET_ALL}"
+                    f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
+                    f"{Fore.YELLOW+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
+                )
+
+        return None
     
     async def process_check_connection(self, email: str, proxy_url=None):
         while True:
@@ -537,6 +590,25 @@ class Interlink:
                 self.log(
                     f"{Fore.CYAN+Style.BRIGHT}Group  :{Style.RESET_ALL}"
                     f"{Fore.YELLOW+Style.BRIGHT} There're No Groups Yet {Style.RESET_ALL}"
+                )
+
+        metric = await self.synchronize_status(email, proxy_url)
+        if metric:
+
+            can_click = metric.get("data", {}).get("canClick")
+            if can_click:
+
+                click = await self.synchronize_metric(email, proxy_url)
+                if click:
+                    self.log(
+                        f"{Fore.CYAN+Style.BRIGHT}Metric :{Style.RESET_ALL}"
+                        f"{Fore.GREEN+Style.BRIGHT} Synchronized {Style.RESET_ALL}"
+                    )
+
+            else:
+                self.log(
+                    f"{Fore.CYAN+Style.BRIGHT}Metric :{Style.RESET_ALL}"
+                    f"{Fore.YELLOW+Style.BRIGHT} Already Synchronized {Style.RESET_ALL}"
                 )
         
     async def main(self):
