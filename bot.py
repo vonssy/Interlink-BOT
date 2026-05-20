@@ -432,7 +432,7 @@ class Interlink:
         return None
             
     async def synchronize_metric(self, email: str, proxy_url=None, retries=1):
-        url = f"{self.BASE_API}/api/v1/group-mining/claim-group-mining"
+        url = f"{self.BASE_API}/api/v1/synchronize-curator"
 
         for attempt in range(retries):
             connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
