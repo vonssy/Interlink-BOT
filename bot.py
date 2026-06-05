@@ -13,7 +13,7 @@ import asyncio, random, time, json, sys, re, os
 class Interlink:
     def __init__(self) -> None:
         self.BASE_API = "https://prod.interlinklabs.ai"
-        self.VERSION = "5.0.2"
+        self.VERSION = "5.0.3"
 
         self.USE_PROXY = False
         self.ROTATE_PROXY = False
@@ -558,14 +558,17 @@ class Interlink:
             groups = group_list.get("data", {}).get("groups", [])
 
             if groups != []:
-                selected_group = None
+                claimable_groups = [
+                    group for group in groups
+                    if group.get("canClaim")
+                ]
 
-                for group in groups:
-                    if group.get("secure") and group.get("canClaim"):
-                        selected_group = group
-                        break
+                if claimable_groups:
+                    selected_group = max(
+                        claimable_groups,
+                        key=lambda g: g.get("totalReward", 0)
+                    )
 
-                if selected_group:
                     group_id = selected_group.get("groupId")
                     reward = selected_group.get("totalReward")
 
