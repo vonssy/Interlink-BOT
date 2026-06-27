@@ -32,6 +32,7 @@ Interlink BOT is an automated tool designed to mining $ITLG tokens across multip
 - 🌐 **Flexible Proxy Support** - Run with or without proxy configuration
 - 🔀 **Smart Proxy Rotation** - Automatic rotation of invalid proxies
 - ⛏️ **$ITLG Mining** - Automated claim $ITLG from private & groups mining
+- 📊 **Metric Synchronization** - Automated synchronized metric
 - 👥 **Multi-Account Support** - Manage multiple accounts simultaneously
 
 ## 📋 Requirements
@@ -57,6 +58,14 @@ pip3 install -r requirements.txt
 ```
 
 ## ⚙️ Configuration
+
+### Environment Configuration
+
+Create or edit `.env` in the project directory:
+```
+# Adjust it yourself to match the latest version of the Interlink App.
+APP_VERSION = "5.0.5"
+```
 
 ### Account Configuration
 

@@ -6,14 +6,17 @@ from aiohttp import (
 )
 from aiohttp_socks import ProxyConnector
 from base64 import urlsafe_b64decode
+from dotenv import load_dotenv
 from datetime import datetime
 from colorama import *
 import asyncio, random, time, json, sys, re, os
 
+load_dotenv()
+
 class Interlink:
     def __init__(self) -> None:
         self.BASE_API = "https://prod.interlinklabs.ai"
-        self.VERSION = "5.0.4"
+        self.VERSION = str(os.getenv("APP_VERSION", "5.0.5"))
 
         self.USE_PROXY = False
         self.ROTATE_PROXY = False
@@ -165,10 +168,14 @@ class Interlink:
 
         return proxy_url
     
-    def decode_token(self, email: str):
+    def decode_token(self, email: str, type: str = "access"):
         try:
-            access_token = self.accounts[email]["accessToken"]
-            header, payload, signature = access_token.split(".")
+            if type == "refresh":
+                token = self.accounts[email]["refreshToken"]
+            else:
+                token = self.accounts[email]["accessToken"]
+
+            header, payload, signature = token.split(".")
             decoded_payload = urlsafe_b64decode(payload + "==").decode("utf-8")
             parsed_payload = json.loads(decoded_payload)
             exp_time = parsed_payload["exp"]
@@ -474,15 +481,31 @@ class Interlink:
             return False
             
     async def process_check_tokens(self, email: str, proxy_url=None):
-        exp_time = self.decode_token(email)
-        if not exp_time:
+        access_exp_time = self.decode_token(email)
+        if not access_exp_time:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}Status :{Style.RESET_ALL}"
-                f"{Fore.RED+Style.BRIGHT} Invalid Token {Style.RESET_ALL}"
+                f"{Fore.RED+Style.BRIGHT} Invalid Access Token {Style.RESET_ALL}"
             )
             return False
 
-        if int(time.time()) > exp_time:
+        if int(time.time()) > access_exp_time:
+
+            refresh_exp_time = self.decode_token(email, "refresh")
+            if not refresh_exp_time:
+                self.log(
+                    f"{Fore.CYAN+Style.BRIGHT}Status :{Style.RESET_ALL}"
+                    f"{Fore.RED+Style.BRIGHT} Invalid Refresh Token {Style.RESET_ALL}"
+                )
+                return False
+            
+            if int(time.time()) > refresh_exp_time:
+                self.log(
+                    f"{Fore.CYAN+Style.BRIGHT}Status :{Style.RESET_ALL}"
+                    f"{Fore.YELLOW+Style.BRIGHT} Refresh Token Already Expired, Run 'setup.py' Again {Style.RESET_ALL}"
+                )
+                return False
+
             refresh = await self.refresh_token(email, proxy_url)
             if not refresh: return False
 

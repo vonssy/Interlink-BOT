@@ -12,7 +12,7 @@ import asyncio, random, time, json, sys, re, os
 class Interlink:
     def __init__(self) -> None:
         self.BASE_API = "https://prod.interlinklabs.ai"
-        self.VERSION = "5.0.4"
+        self.VERSION = str(os.getenv("APP_VERSION", "5.0.5"))
 
         self.USE_PROXY = False
         self.ROTATE_PROXY = False
