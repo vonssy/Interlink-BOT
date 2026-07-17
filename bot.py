@@ -248,7 +248,7 @@ class Interlink:
         if response.status >= 400:
             raise Exception(f"HTTP: {response.status}:{await response.text()}")
 
-    async def check_connection(self, email: str, proxy_url=None):
+    async def check_connection(self, proxy_url=None):
         url = "https://api.ipify.org?format=json"
         
         connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
@@ -719,7 +719,7 @@ class Interlink:
                     print(
                         f"{Fore.CYAN+Style.BRIGHT}[ Wait for{Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT} {formatted_time} {Style.RESET_ALL}"
-                        f"{Fore.CYAN+Style.BRIGHT}... ]{Style.RESET_ALL}"
+                        f"{Fore.CYAN+Style.BRIGHT}]{Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT} | {Style.RESET_ALL}"
                         f"{Fore.BLUE+Style.BRIGHT}All Accounts Have Been Processed...{Style.RESET_ALL}",
                         end="\r"
