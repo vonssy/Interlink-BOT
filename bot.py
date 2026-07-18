@@ -244,7 +244,7 @@ class Interlink:
                 else:
                     print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter 'y' or 'n'.{Style.RESET_ALL}")
 
-    async def enusre_ok(self, response):
+    async def ensure_ok(self, response):
         if response.status >= 400:
             raise Exception(f"HTTP: {response.status}:{await response.text()}")
 
@@ -255,7 +255,7 @@ class Interlink:
         try:
             async with ClientSession(connector=connector, timeout=ClientTimeout(total=15)) as session:
                 async with session.get(url=url, proxy=proxy, proxy_auth=proxy_auth) as response:
-                    await self.enusre_ok(response)
+                    await self.ensure_ok(response)
                     return True
         except (Exception, ClientResponseError) as e:
             self.log(
@@ -281,7 +281,7 @@ class Interlink:
 
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
                     async with session.post(url=url, headers=headers, json=payload, proxy=proxy, proxy_auth=proxy_auth) as response:
-                        await self.enusre_ok(response)
+                        await self.ensure_ok(response)
                         return await response.json()
             except (Exception, ClientResponseError) as e:
                 if attempt < retries - 1:
@@ -311,7 +311,7 @@ class Interlink:
 
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
                     async with session.get(url=url, headers=headers, params=params, proxy=proxy, proxy_auth=proxy_auth) as response:
-                        await self.enusre_ok(response)
+                        await self.ensure_ok(response)
                         return await response.json()
             except (Exception, ClientResponseError) as e:
                 if attempt < retries - 1:
@@ -338,7 +338,7 @@ class Interlink:
 
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
                     async with session.post(url=url, headers=headers, json={}, proxy=proxy, proxy_auth=proxy_auth) as response:
-                        await self.enusre_ok(response)
+                        await self.ensure_ok(response)
                         return await response.json()
             except (Exception, ClientResponseError) as e:
                 if attempt < retries - 1:
@@ -365,7 +365,7 @@ class Interlink:
 
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
                     async with session.post(url=url, headers=headers, json={}, proxy=proxy, proxy_auth=proxy_auth) as response:
-                        await self.enusre_ok(response)
+                        await self.ensure_ok(response)
                         return await response.json()
             except (Exception, ClientResponseError) as e:
                 if attempt < retries - 1:
@@ -396,7 +396,7 @@ class Interlink:
 
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
                     async with session.post(url=url, headers=headers, json=payload, proxy=proxy, proxy_auth=proxy_auth) as response:
-                        await self.enusre_ok(response)
+                        await self.ensure_ok(response)
                         return await response.json()
             except (Exception, ClientResponseError) as e:
                 if attempt < retries - 1:
@@ -423,7 +423,7 @@ class Interlink:
 
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
                     async with session.get(url=url, headers=headers, proxy=proxy, proxy_auth=proxy_auth) as response:
-                        await self.enusre_ok(response)
+                        await self.ensure_ok(response)
                         return await response.json()
             except (Exception, ClientResponseError) as e:
                 if attempt < retries - 1:
@@ -450,7 +450,7 @@ class Interlink:
 
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
                     async with session.post(url=url, headers=headers, json={}, proxy=proxy, proxy_auth=proxy_auth) as response:
-                        await self.enusre_ok(response)
+                        await self.ensure_ok(response)
                         return await response.json()
             except (Exception, ClientResponseError) as e:
                 if attempt < retries - 1:
