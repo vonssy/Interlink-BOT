@@ -452,4 +452,4 @@ if __name__ == "__main__":
             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
             f"{Fore.RED + Style.BRIGHT}[ EXIT ] Interlink Labs - BOT{Style.RESET_ALL}                                      ",                                       
         )
-        sys.exit(1)
+        sys.exit(0)

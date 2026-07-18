@@ -7,7 +7,7 @@ from aiohttp import (
 from aiohttp_socks import ProxyConnector
 from base64 import urlsafe_b64decode
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from colorama import *
 import asyncio, random, time, json, sys, re, os
 
@@ -214,6 +214,18 @@ class Interlink:
         }
 
         return headers.copy()
+    
+    def get_next_run_time(self, anchor_minute=1, interval_hours=4):
+        now = datetime.now(timezone.utc)
+        today_base = now.replace(hour=0, minute=anchor_minute, second=0, microsecond=0)
+
+        slots = [today_base + timedelta(hours=interval_hours * i) for i in range(24 // interval_hours)]
+
+        for slot in slots:
+            if slot > now:
+                return slot
+
+        return today_base + timedelta(days=1)
 
     def print_question(self):
         while True:
@@ -718,9 +730,18 @@ class Interlink:
                     await asyncio.sleep(random.uniform(2.0, 3.0))
 
                 self.log(f"{Fore.CYAN + Style.BRIGHT}={Style.RESET_ALL}"*67)
-                seconds = 4 * 60 * 60
-                while seconds > 0:
-                    formatted_time = self.format_seconds(seconds)
+
+                next_run = self.get_next_run_time(anchor_minute=1, interval_hours=4)
+
+                while True:
+                    now = datetime.now(timezone.utc)
+                    remaining = (next_run - now).total_seconds()
+
+                    if remaining <= 0:
+                        break
+
+                    formatted_time = self.format_seconds(remaining)
+
                     print(
                         f"{Fore.CYAN+Style.BRIGHT}[ Wait for{Style.RESET_ALL}"
                         f"{Fore.WHITE+Style.BRIGHT} {formatted_time} {Style.RESET_ALL}"
@@ -730,7 +751,6 @@ class Interlink:
                         end="\r"
                     )
                     await asyncio.sleep(1)
-                    seconds -= 1
 
         except Exception as e:
             self.log(f"{Fore.RED+Style.BRIGHT}Error: {e}{Style.RESET_ALL}")
@@ -746,4 +766,4 @@ if __name__ == "__main__":
             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
             f"{Fore.RED + Style.BRIGHT}[ EXIT ] Interlink - BOT{Style.RESET_ALL}                                       "                              
         )
-        sys.exit(1)
+        sys.exit(0)
