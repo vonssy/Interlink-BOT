@@ -470,6 +470,11 @@ class Interlink:
             if self.USE_PROXY:
                 proxy_url = self.get_next_proxy_for_account(email)
 
+            self.log(
+                f"{Fore.CYAN+Style.BRIGHT}Proxy  :{Style.RESET_ALL}"
+                f"{Fore.WHITE+Style.BRIGHT} {self.display_proxy(proxy_url)} {Style.RESET_ALL}"
+            )
+
             is_valid = await self.check_connection(proxy_url)
             if is_valid: return True
             
